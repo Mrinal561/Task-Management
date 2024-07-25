@@ -1,15 +1,16 @@
 /* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { TaskController } from './tasks.controller';
+import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TasksRepository } from './tasks.repository';
-import { Task } from './task.entity';
-import { AuthModule } from 'src/auth/auth.module';
+import { PassportModule } from '@nestjs/passport';
+import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Task]), AuthModule],
-  controllers: [TaskController],
-  providers: [TasksService, TasksRepository],
+  imports: [
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PrismaModule,
+  ],
+  controllers: [TasksController],
+  providers: [TasksService],
 })
 export class TasksModule {}

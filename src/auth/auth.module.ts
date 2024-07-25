@@ -2,25 +2,27 @@
 import { Module } from "@nestjs/common";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { User } from "./user.entity";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { UserRepository } from './user.repository';
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./jwt.strategy";
+import { PrismaModule } from '../../prisma/prisma.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
     imports: [
+        ConfigModule,
         PassportModule.register({ defaultStrategy: 'jwt' }),
-        JwtModule.register({
-            secret: 'topSecret51',
-            signOptions: {
-                expiresIn: 3600,
-            }
-,        }),
-        TypeOrmModule.forFeature([User]),
+        JwtModule.registerAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                secret: configService.get('JWT_SECRET'),
+                signOptions: { expiresIn: '1h' },
+            }),
+            inject: [ConfigService],
+        }),
+        PrismaModule,
     ],
-    providers: [AuthService, UserRepository, JwtStrategy],
+    providers: [AuthService, JwtStrategy],
     controllers: [AuthController],
     exports: [JwtStrategy, PassportModule],
 })

@@ -1,36 +1,49 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserRepository } from './user.repository';
+import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-
-
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserRepository)
-    private userRepository: UserRepository,
+    private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
 
   async signUp(authCredentialsDto: AuthCredentialsDto): Promise<void> {
-    return this.userRepository.createUser(authCredentialsDto);
+    const { username, password } = authCredentialsDto;
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    try {
+      await this.prisma.user.create({
+        data: {
+          username,
+          password: hashedPassword,
+        },
+      });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('Username already exists');
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
   }
 
   async signIn(authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
     const { username, password } = authCredentialsDto;
 
-    const user = await this.userRepository.findOne({ where: { username } });
+    const user = await this.prisma.user.findUnique({ where: { username } });
     if (user && (await bcrypt.compare(password, user.password))) {
-        const payload = { username };
-        const accessToken: string = await this.jwtService.sign(payload);
-        return { accessToken };
-    }
-    else{
-        throw new UnauthorizedException('Please check your login credentials')
+      const payload = { username };
+      const accessToken: string = await this.jwtService.sign(payload);
+      return { accessToken };
+    } else {
+      throw new UnauthorizedException('Please check your login credentials');
     }
   }
 }
