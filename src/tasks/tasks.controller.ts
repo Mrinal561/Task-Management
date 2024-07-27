@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Param, Delete, Patch, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, Query, UseGuards} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -43,6 +43,8 @@ export class TasksController {
   deleteTaskById(@Param('id') id: string, @GetUser() user: User): Promise<void> {
     return this.tasksService.deleteTask(id, user.id);
   }
+
+
 
 
   @Patch('/:id/status')
