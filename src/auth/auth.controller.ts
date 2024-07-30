@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Post } from '@nestjs/common';
+import {  Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { AuthService } from './auth.service';
 
@@ -7,14 +8,13 @@ import { AuthService } from './auth.service';
 export class AuthController {
     constructor(private authService: AuthService) {}
 
-    @Post('/signup')
-    signUp(@Body() authCredentialsDto: AuthCredentialsDto): Promise<void> {
+    @MessagePattern({ cmd: 'signup' })
+    async signUp(@Payload() authCredentialsDto: AuthCredentialsDto): Promise<void> {
         return this.authService.signUp(authCredentialsDto);
     }
 
-
-    @Post('/signin')
-    signIn(@Body() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
+    @MessagePattern({ cmd: 'signin' })
+    async signIn(@Payload() authCredentialsDto: AuthCredentialsDto): Promise<{ accessToken: string }> {
         return this.authService.signIn(authCredentialsDto);
     }
 
