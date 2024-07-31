@@ -4,6 +4,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { TaskMicroserviceModule } from './task-microservice.module';
 
 async function bootstrap() {
+    try{
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     TaskMicroserviceModule,
     {
@@ -18,5 +19,11 @@ async function bootstrap() {
     },
   );
   await app.listen();
+  console.log("microservice is listening");
+    } catch (error) {
+        console.error('failed to start microservice:' , error);
+        
+    }
+  
 }
 bootstrap();
